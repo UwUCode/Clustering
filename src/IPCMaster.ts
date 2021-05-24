@@ -13,8 +13,14 @@ export interface Stats {
 	memory: NodeJS.MemoryUsage;
 	combinedMemory: NodeJS.MemoryUsage;
 	clusters: Array<ClusterStats>;
-	shards: Array<ShardStats>;
+	readonly shards: Array<ShardStats>;
 	services: Array<ServiceStats>;
+	guilds: number;
+	users: number;
+	voiceConnections: number;
+	guildChannels: number;
+	dmChannels: number;
+	largeGuilds: number;
 }
 
 export interface ClusterStats {
@@ -56,8 +62,8 @@ export default class IPCMaster<E extends DefaultEventMap = DefaultEventMap> exte
 			this
 				.on("stats", ((data: ClusterStats | ServiceStats, messageId: string, from: MessageRoute<"cluster" | "service">) => {
 					switch (from.type) {
-						case "cluster": this.master.stats!.clusters.push(data as ClusterStats); break;
-						case "service": this.master.stats!.services.push(data as ServiceStats); break;
+						case "cluster": this.master.stats!.setCluster(from.id, data as ClusterStats); break;
+						case "service": this.master.stats!.setService(from.name, data as ServiceStats); break;
 						default: throw new TypeError("invalid stats type recieved");
 					}
 				}) as any)

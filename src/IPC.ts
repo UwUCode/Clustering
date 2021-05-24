@@ -1,10 +1,11 @@
 import { ServiceDefaultEvents } from "./service/ServiceManager";
 import Cluster, { ClusterDefaultEvents } from "./cluster/Cluster";
 import { DEBUG, EVAL_RESPONSE_CODES } from "./Constants";
-import { Stats } from "./IPCMaster";
+import { ShardStats, Stats } from "./IPCMaster";
 import BaseService from "./service/BaseService";
 import { EventEmitter } from "tsee";
 import Logger from "logger";
+import { Utility } from "utilities";
 import crypto from "crypto";
 
 export interface ServiceMessageRoute {
@@ -111,14 +112,16 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 	sendToService(name: string, op: string, data: unknown = null) { return this.sendMessage(op, data, `service.${name}`); }
 	sendToRoute(r: MessageRoute, op: string, data: unknown = null) { return this.sendMessage(op, data, r === "master" ? "master" : r.type === "cluster" ? `cluster.${r.id}` : `service.${r.name}`); }
 
+	/* eslint-disable @typescript-eslint/ban-ts-comment */
 	// @ts-ignore
 	register<D = never, F extends "cluster" | "service" | "master" | "all" = never>(name: string, handler: Emitted<D, F>) { this.on(name, handler); }
-	
+
 	// @ts-ignore
 	registerOnce<D = never, F extends "cluster" | "service" | "master" | "all" = "all">(name: string, handler: Emitted<D, F>) { this.once(name, handler); }
 
 	// @ts-ignore
 	unregister(name: string) { this.removeAllListeners(name); }
+	/* eslint-enable @typescript-eslint/ban-ts-comment */
 
 	async serviceCommand<R = unknown>(service: string, data: unknown, responsive: true): Promise<R>;
 	async serviceCommand(service: string, data: unknown, responsive?: false): Promise<void>;
@@ -149,14 +152,27 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 		} else this.emit(op, data, messageId, from);
 	}
 
-	async getStats() {
-		return new Promise<Stats>((resolve, reject) => {
+	async getStats(error: false): Promise<Stats | null>;
+	async getStats(error?: true): Promise<Stats>;
+	async getStats(error = true) {
+		return new Promise<Stats | null>((resolve, reject) => {
 			const id = this.sendMessage("fetchStats", null, "master");
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- I can't make definitions for all of the possible ids
 			// @ts-ignore
 			this.once(id, ((data: Stats | null) => {
 				clearInterval(t);
-				if (data === null) return reject(new Error("stats are either not enabled, or they have not been processed yet"));
+				if (data === null) {
+					if (error) reject(new Error("stats are either not enabled, or they have not been processed yet"));
+					else resolve(null);
+					return;
+				}
+				delete (data as { shards?: unknown; }).shards;
+				// big memory waste to ship all shard stats twice
+				Utility.definePropertyIfNotPresent(data, "shards", {
+					get(this: Stats) {
+						return this.clusters.reduce((a,b) => a.concat(...b.shards), [] as Array<ShardStats>);
+					}
+				});
 				return resolve(data);
 			}));
 			const t = setTimeout(() => {

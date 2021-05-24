@@ -1,9 +1,9 @@
 import BaseCluster, { BaseClusterWithSignature } from "./BaseCluster";
 import IPC, { Emitted } from "../IPC";
+import { ParsedOptions } from "../Master";
 import Eris from "eris";
 import { ModuleImport } from "utilities";
 import { performance } from "perf_hooks";
-import { ParsedOptions } from "../Master";
 
 export interface ClusterDefaultEvents {
 	"clusterSetup": Emitted<{

@@ -3,10 +3,11 @@ import { SHARDS_PER_CLUSTER } from "./Constants";
 import ServiceManager, { ServiceCreator } from "./service/ServiceManager";
 import BaseService, { BaseServiceWithSignature } from "./service/BaseService";
 import IPC, { Emitted } from "./IPC";
-import IPCMaster, { ShardStats, Stats } from "./IPCMaster";
+import IPCMaster from "./IPCMaster";
 import ClusterManager from "./cluster/ClusterManager";
 import Cluster from "./cluster/Cluster";
-import { ModuleImport, pid, SomePartial } from "utilities";
+import StatsContainer from "./StatsContainer";
+import { ModuleImport, pid } from "utilities";
 import { DefaultEventMap, EventEmitter } from "tsee";
 import { BotActivityType, Client, ClientOptions, Status } from "eris";
 import Logger from "logger";
@@ -64,7 +65,7 @@ export interface Options {
 
 export type ParsedOptions = Required<Omit<Options, "shardCount" | "clusterCount"> & Record<"shardCount" | "clusterCount", number>>;
 
-export default class Manager extends EventEmitter {
+export default class Master extends EventEmitter {
 	ipc: IPCMaster<BuiltInIPCEvents>;
 	options: ParsedOptions;
 	services: ServiceManager;
@@ -74,7 +75,7 @@ export default class Manager extends EventEmitter {
 	private launched = false;
 	private current: BaseService | Cluster;
 	private statsInterval: NodeJS.Timeout;
-	stats?: Stats;
+	stats?: StatsContainer;
 	constructor(opts: Options) {
 		super();
 		this.ipc = new IPCMaster(this);
@@ -192,26 +193,7 @@ export default class Manager extends EventEmitter {
 
 	startStats() {
 		if (this.stats !== undefined) throw new TypeError("stats have already been started");
-		this.stats = {
-			memory: process.memoryUsage(),
-			get combinedMemory() {
-				const m = JSON.parse(JSON.stringify(this.memory)) as NodeJS.MemoryUsage;
-				const l = [
-					...this.clusters.map(v => v.memory),
-					...this.services.map(v => v.memory)
-				];
-				Object.keys(m).forEach(k => {
-					l.forEach((_, v) => m[k as keyof NodeJS.MemoryUsage] += l[v][k as keyof NodeJS.MemoryUsage]);
-				});
-
-				return m;
-			},
-			clusters: [],
-			get shards() {
-				return this.clusters.reduce((a,b) => a.concat(b.shards), [] as Array<ShardStats>);
-			},
-			services: []
-		};
+		this.stats = new StatsContainer();
 		this.getStats();
 		this.statsInterval = setInterval(this.getStats.bind(this), this.options.statsInterval);
 	}
@@ -223,7 +205,7 @@ export default class Manager extends EventEmitter {
 	}
 
 	private getStats() {
-		this.stats!.memory = process.memoryUsage();
+		this.stats!.updateMemory();
 		this.services.workersByName.forEach((_, name) => this.ipc.sendMessage("getStats", null, `service.${name}`));
 		this.clusters.workersById.forEach((_, id) => this.ipc.sendMessage("getStats", null, `cluster.${id}`));
 	}

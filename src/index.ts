@@ -12,6 +12,7 @@ export * from "./service/BaseService";
 export * from "./service/ServiceManager";
 export * from "./Constants";
 export * from "./IPC";
+export * from "./IPCMaster";
 export * from "./Master";
 import { version as VERSION } from "../package.json";
 
