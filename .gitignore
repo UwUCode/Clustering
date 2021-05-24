@@ -103,8 +103,6 @@ dist
 # TernJS port file
 .tern-port
 
-# tokens and stuff
 test/
-
-# vscode stuff
+build/
 .vscode/
