@@ -105,3 +105,6 @@ dist
 
 # tokens and stuff
 test/
+
+# vscode stuff
+.vscode/
