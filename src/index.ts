@@ -13,6 +13,7 @@ export * from "./service/ServiceManager";
 export * from "./Constants";
 export * from "./IPC";
 export * from "./Master";
+import { version as VERSION } from "../package.json";
 
 
 export {
@@ -22,6 +23,7 @@ export {
 	BaseService,
 	ServiceManager,
 	IPC,
-	Master
+	Master,
+	VERSION
 };
 export default Master;
