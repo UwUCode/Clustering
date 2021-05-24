@@ -1,8 +1,8 @@
 {
 	"name": "@uwu-codes/clustering",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Clustering module for Eris.",
-	"main": "build/index.js",
+	"main": "build/src/index.js",
 	"scripts": {
 		"prepublishOnly": "rm -rf build && tsc && echo Build Finished",
 		"build": "npm run prepublishOnly",
