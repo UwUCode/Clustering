@@ -1,0 +1,49 @@
+{
+	"name": "@uwu-codes/clustering",
+	"version": "1.0.0",
+	"description": "A logger for my applications.",
+	"main": "build/index.js",
+	"scripts": {
+		"prepublishOnly": "rm -rf build && tsc && echo Build Finished",
+		"build": "npm run prepublishOnly",
+		"circ": "dpdm --tree=false --circular=true --warning=false -T ."
+	},
+	"author": "Donovan_DMC",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/UWUCode/Clustering.git"
+	},
+	"bugs": {
+		"url": "https://github.com/UWUCode/Clustering/issues"
+	},
+	"homepage": "https://github.com/UWUCode/Clustering#readme",
+	"dependencies": {
+		"core": "npm:@uwu-codes/core@^1.0.100",
+		"eris": "github:abalabahaha/eris#dev",
+		"fs-extra": "^10.0.0",
+		"logger": "npm:@uwu-codes/logger@^1.0.21",
+		"tsee": "^1.3.2",
+		"utilities": "npm:@uwu-codes/utils@^1.0.34"
+	},
+	"devDependencies": {
+		"@types/fs-extra": "^9.0.11",
+		"@types/node": "^15.6.0",
+		"@uwu-codes/eslint-config": "^1.0.12",
+		"@uwu-codes/tsconfig": "^1.0.1",
+		"dpdm": "^3.6.1",
+		"typescript": "^4.4.0-dev.20210511"
+	},
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"node": ">=16.x",
+		"npm": ">=7.x"
+	},
+	"os": [
+		"linux"
+	],
+	"engineStrict": true
+}
