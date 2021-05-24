@@ -1,3 +1,4 @@
 test/
 src/
+.vscode/
 .eslintrc.json
