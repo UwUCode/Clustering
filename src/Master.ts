@@ -120,7 +120,7 @@ export default class Master extends EventEmitter {
 				const rec = await this.eris.getBotGateway();
 				const d = new Date(n + rec.session_start_limit.reset_after);
 				Logger.debug("Manager", `Gateway recommends ${rec.shards} shard${rec.shards !== 1 ? "s" : ""}`);
-				Logger.debug("Manager", `Session usage: ${rec.session_start_limit.remaining}/${rec.session_start_limit.total} -- Reset: ${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`);
+				Logger.debug("Manager", `Session usage: ${rec.session_start_limit.remaining}/${rec.session_start_limit.total} -- Reset: ${(d.getMonth() + 1).toString().padStart(2, "0")}/${(d.getDate()).toString().padStart(2, "0")}/${d.getFullYear()} ${(d.getHours()).toString().padStart(2, "0")}:${(d.getMinutes()).toString().padStart(2, "0")}:${(d.getSeconds()).toString().padStart(2, "0")}`);
 				this.options.shardCount = rec.shards;
 			}
 
