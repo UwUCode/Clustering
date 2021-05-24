@@ -61,7 +61,7 @@ export type ProcessMessageReference = string;
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore -- I don't care
-export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extends EventEmitter<E & { "statsResponse": Emitted<Stats, "master">; }> {
+export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extends EventEmitter<E & Record<"statsResponse", Emitted<Stats, "master">>> {
 	static generateRandomId() {
 		return crypto.randomBytes(16).toString("hex");
 	}
@@ -105,6 +105,20 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 		return id;
 	}
 
+
+	sendToMaster(op: string, data: unknown = null) { return this.sendMessage(op, data, "master"); }
+	sendToCluster(id: number, op: string, data: unknown = null) { return this.sendMessage(op, data, `cluster.${id}`); }
+	sendToService(name: string, op: string, data: unknown = null) { return this.sendMessage(op, data, `service.${name}`); }
+
+	// @ts-ignore
+	register<D = never, F extends "cluster" | "service" | "master" | "all" = never>(name: string, handler: Emitted<D, F>) { this.on(name, handler); }
+	
+	// @ts-ignore
+	registerOnce<D = never, F extends "cluster" | "service" | "master" | "all" = "all">(name: string, handler: Emitted<D, F>) { this.once(name, handler); }
+
+	// @ts-ignore
+	unregister(name: string) { this.removeAllListeners(name); }
+
 	async serviceCommand<R = unknown>(service: string, data: unknown, responsive: true): Promise<R>;
 	async serviceCommand(service: string, data: unknown, responsive?: false): Promise<void>;
 	async serviceCommand<R = unknown>(service: string, data: unknown, responsive = false): Promise<R | void> {
@@ -113,9 +127,7 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 			if (!responsive) return resolve();
 			else {
 				const t = setTimeout(() => reject(new Error("Response timed out.")), 1.5e4);
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- I can't make definitions for all of the possible ids
-				// @ts-ignore
-				this.once(id, (d: R) => {
+				this.registerOnce<R>(id, (d) => {
 					clearTimeout(t);
 					resolve(d);
 				});
