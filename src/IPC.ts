@@ -109,6 +109,7 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 	sendToMaster(op: string, data: unknown = null) { return this.sendMessage(op, data, "master"); }
 	sendToCluster(id: number, op: string, data: unknown = null) { return this.sendMessage(op, data, `cluster.${id}`); }
 	sendToService(name: string, op: string, data: unknown = null) { return this.sendMessage(op, data, `service.${name}`); }
+	sendToRoute(r: MessageRoute, op: string, data: unknown = null) { return this.sendMessage(op, data, r === "master" ? "master" : r.type === "cluster" ? `cluster.${r.id}` : `service.${r.name}`); }
 
 	// @ts-ignore
 	register<D = never, F extends "cluster" | "service" | "master" | "all" = never>(name: string, handler: Emitted<D, F>) { this.on(name, handler); }

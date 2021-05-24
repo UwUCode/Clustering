@@ -201,6 +201,9 @@ export default class IPCMaster<E extends DefaultEventMap = DefaultEventMap> exte
 		}
 		return id;
 	}
+	sendToCluster(id: number, op: string, data: unknown = null) { return this.sendMessage(op, data, `cluster.${id}`); }
+	sendToService(name: string, op: string, data: unknown = null) { return this.sendMessage(op, data, `service.${name}`); }
+	sendToRoute(r: MessageRoute<"cluster" | "service">, op: string, data: unknown = null) { return this.sendMessage(op, data, r.type === "cluster" ? `cluster.${r.id}` : `service.${r.name}`); }
 
 	override messageHandler(message: string | ProcessMessage) {
 		return super.messageHandler.call(this, message);
