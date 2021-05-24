@@ -1,7 +1,7 @@
 if (!("send" in process)) process.env.TYPE = "MASTER";
 import { SHARDS_PER_CLUSTER } from "./Constants";
 import ServiceManager, { ServiceCreator } from "./service/ServiceManager";
-import ServiceBase, { ServiceBaseWithSignature } from "./service/ServiceBase";
+import BaseService, { BaseServiceWithSignature } from "./service/BaseService";
 import IPC, { Emitted } from "./IPC";
 import IPCMaster, { ShardStats, Stats } from "./IPCMaster";
 import ClusterManager from "./cluster/ClusterManager";
@@ -47,34 +47,35 @@ export interface WebhookConfig {
 export interface Options {
 	path: string;
 	token: string;
-	shardCount: number | "auto";
-	clusterCount: number | "auto";
-	clientOptions: ClientOptions;
-	clusterTimeout: number;
-	serviceTimeout: number;
-	killTimeout: number;
-	nodeArgs: Array<string>;
-	statsInterval: number;
-	fetchTimeout: number;
-	startingStatus: StartingStatus | null;
-	services: Array<ServiceCreator>;
-	webhooks: Array<WebhookConfig>;
-	pid: false | string;
+	shardCount?: number | "auto";
+	clusterCount?: number | "auto";
+	clientOptions?: ClientOptions;
+	clusterTimeout?: number;
+	serviceTimeout?: number;
+	killTimeout?: number;
+	nodeArgs?: Array<string>;
+	statsInterval?: number;
+	fetchTimeout?: number;
+	startingStatus?: StartingStatus | null;
+	services?: Array<ServiceCreator>;
+	webhooks?: Array<WebhookConfig>;
+	pid?: false | string;
 }
 
+export type ParsedOptions = Required<Omit<Options, "shardCount" | "clusterCount"> & Record<"shardCount" | "clusterCount", number>>;
 
 export default class Manager extends EventEmitter {
 	ipc: IPCMaster<BuiltInIPCEvents>;
-	options: Omit<Options, "shardCount" | "clusterCount"> & Record<"shardCount" | "clusterCount", number>;
+	options: ParsedOptions;
 	services: ServiceManager;
 	clusters: ClusterManager;
 	eris: Client;
 	statsPaused = true;
 	private launched = false;
-	private current: ServiceBase | Cluster;
+	private current: BaseService | Cluster;
 	private statsInterval: NodeJS.Timeout;
 	stats?: Stats;
-	constructor(opts: SomePartial<Options, "path" | "token">) {
+	constructor(opts: Options) {
 		super();
 		this.ipc = new IPCMaster(this);
 		this.options = {
@@ -150,10 +151,10 @@ export default class Manager extends EventEmitter {
 				case "SERVICE": {
 					if (!process.env.JS_PATH) throw new Error("[service] JS_PATH is missing in process environment variables");
 					if (!process.env.NAME) throw new Error("[service] NAME is missing in process environment variables");
-					let v = await import(process.env.JS_PATH!) as ModuleImport<ServiceBaseWithSignature> | ServiceBaseWithSignature;
+					let v = await import(process.env.JS_PATH!) as ModuleImport<BaseServiceWithSignature> | BaseServiceWithSignature;
 					if ("default" in v) v = v.default;
 					// it's present, but not in typings(?)
-					if (!((v as unknown as { prototype: ServiceBase; }).prototype instanceof ServiceBase)) throw new Error(`Export in "${process.env.JS_PATH!}" for service ${process.env.NAME!} does not extend ServiceBase`);
+					if (!((v as unknown as { prototype: BaseService; }).prototype instanceof BaseService)) throw new Error(`Export in "${process.env.JS_PATH!}" for service ${process.env.NAME!} does not extend BaseService`);
 					/* const s = */ this.current = new v({
 						name: process.env.NAME!,
 						ipc: new IPC()

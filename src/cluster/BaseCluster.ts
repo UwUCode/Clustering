@@ -1,14 +1,14 @@
 import Cluster from "./Cluster";
 import { ShutdownCallback } from "../Master";
 
-export interface BaseInitalizer {
+export interface BaseClusterInitializer {
 	cluster: Cluster;
 }
 
-export type BaseWithSignature = BaseInitalizer & (new(d: BaseInitalizer) => Base);
-export default abstract class Base {
+export type BaseClusterWithSignature = BaseClusterInitializer & (new(d: BaseClusterInitializer) => BaseCluster);
+export default abstract class BaseCluster {
 	cluster: Cluster;
-	constructor({ cluster }: BaseInitalizer) {
+	constructor({ cluster }: BaseClusterInitializer) {
 		this.cluster = cluster;
 		this.ipc.on("shutdown", () => {
 			this.shutdown(() => {

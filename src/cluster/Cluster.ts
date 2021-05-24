@@ -1,13 +1,13 @@
-import Base, { BaseWithSignature } from "./Base";
+import BaseCluster, { BaseClusterWithSignature } from "./BaseCluster";
 import IPC, { Emitted } from "../IPC";
-import { Options } from "../Master";
 import Eris from "eris";
 import { ModuleImport } from "utilities";
 import { performance } from "perf_hooks";
+import { ParsedOptions } from "../Master";
 
 export interface ClusterDefaultEvents {
 	"clusterSetup": Emitted<{
-		options: Options;
+		options: ParsedOptions;
 		shards: Array<number>;
 		shardStart: number;
 		shardEnd: number;
@@ -22,9 +22,9 @@ export default class Cluster {
 	ipc: IPC<ClusterDefaultEvents>;
 	id: number;
 	path: string;
-	class: Base;
+	class: BaseCluster;
 	client: Eris.Client;
-	options: Options;
+	options: ParsedOptions;
 	shards: Array<number>;
 	shardStart: number;
 	shardEnd: number;
@@ -76,10 +76,10 @@ export default class Cluster {
 	}
 
 	private async start() {
-		let v = await import(process.env.JS_PATH!) as ModuleImport<BaseWithSignature> | BaseWithSignature;
+		let v = await import(process.env.JS_PATH!) as ModuleImport<BaseClusterWithSignature> | BaseClusterWithSignature;
 		if ("default" in v) v = v.default;
 		// it's present, but not in typings(?)
-		if (!((v as unknown as { prototype: Base; }).prototype instanceof Base)) throw new Error(`Export in "${process.env.JS_PATH!}" does not extend Base`);
+		if (!((v as unknown as { prototype: BaseCluster; }).prototype instanceof BaseCluster)) throw new Error(`Export in "${process.env.JS_PATH!}" does not extend Base`);
 		this.class = new v({
 			cluster: this
 		});

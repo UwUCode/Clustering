@@ -1,4 +1,4 @@
-import { Options } from "../Master";
+import { ParsedOptions } from "../Master";
 import Master from "..";
 import Logger from "logger";
 import { Colors, EmbedBuilder } from "core";
@@ -14,13 +14,13 @@ interface ClusterCreator {
 export default class ClusterManager {
 	master: Master;
 	list: Array<ClusterCreator>;
-	private options: Options;
+	private options: ParsedOptions;
 	workers = [] as Array<Worker>;
 	workersById = new Map<number, Worker>();
 	private started = false;
 	private firstReady = false;
 	private shutdown = [] as Array<number>;
-	constructor(opt: Options, master: Master) {
+	constructor(opt: ParsedOptions, master: Master) {
 		this.options = opt;
 		this.master = master;
 	}

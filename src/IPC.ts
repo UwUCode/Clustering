@@ -2,7 +2,7 @@ import { ServiceDefaultEvents } from "./service/ServiceManager";
 import Cluster, { ClusterDefaultEvents } from "./cluster/Cluster";
 import { DEBUG, EVAL_RESPONSE_CODES } from "./Constants";
 import { Stats } from "./IPCMaster";
-import ServiceBase from "./service/ServiceBase";
+import BaseService from "./service/BaseService";
 import { EventEmitter } from "tsee";
 import Logger from "logger";
 import crypto from "crypto";
@@ -187,7 +187,7 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 		});
 	}
 
-	async evalAtService<T extends { [k: string]: string | number | boolean; } = never, S extends ServiceBase = ServiceBase>(name: number, code: ((this: S, args: T) => Promise<unknown>) | string, args?: T) {
+	async evalAtService<T extends { [k: string]: string | number | boolean; } = never, S extends BaseService = BaseService>(name: number, code: ((this: S, args: T) => Promise<unknown>) | string, args?: T) {
 		code = this.parse(code, args);
 		return new Promise<EvalResponse>((resolve, reject) => {
 			const msgId = this.sendMessage("evalAtService", { name, code }, "master");
@@ -225,7 +225,7 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 		});
 	}
 
-	async broadcastServiceEval<R = unknown, T extends { [k: string]: string | number | boolean; } = Record<string, string | number | boolean>, S extends ServiceBase = ServiceBase>(code: ((this: S, args: T) => Promise<R>) | string, args?: T) {
+	async broadcastServiceEval<R = unknown, T extends { [k: string]: string | number | boolean; } = Record<string, string | number | boolean>, S extends BaseService = BaseService>(code: ((this: S, args: T) => Promise<R>) | string, args?: T) {
 		code = this.parse(code, args);
 		return new Promise<Array<EvalResponse<R> & { serviceName: string; }>>((resolve, reject) => {
 			const msgId = this.sendMessage("broadcastServiceEval", code, "master");
@@ -244,7 +244,7 @@ export default class IPC<E = ServiceDefaultEvents | ClusterDefaultEvents> extend
 		});
 	}
 
-	async broadcastEval<R = unknown, T extends { [k: string]: string | number | boolean; } =  Record<string, string | number | boolean>, S extends ServiceBase = ServiceBase>(code: ((this: Cluster | S, args: T) => Promise<R>) | string, args?: T) {
+	async broadcastEval<R = unknown, T extends { [k: string]: string | number | boolean; } =  Record<string, string | number | boolean>, S extends BaseService = BaseService>(code: ((this: Cluster | S, args: T) => Promise<R>) | string, args?: T) {
 		const clusters = await this.broadcastClusterEval<R>(code as string, args);
 		const services = await this.broadcastServiceEval<R>(code as string, args);
 

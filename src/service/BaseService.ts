@@ -8,8 +8,8 @@ export interface ServiceInitalizer {
 	name: string;
 }
 
-export type ServiceBaseWithSignature = ServiceBase & (new(d: ServiceInitalizer) => ServiceBase);
-export default abstract class ServiceBase {
+export type BaseServiceWithSignature = BaseService & (new(d: ServiceInitalizer) => BaseService);
+export default abstract class BaseService {
 	ipc: IPC<ServiceDefaultEvents>;
 	name: string;
 	protected processedCommands = 0;
@@ -64,7 +64,8 @@ export default abstract class ServiceBase {
 		return `[Service ${this.name}]`;
 	}
 
-	done() {
+	get done() { return this.ready; }
+ 	ready() {
 		this.ipc.sendMessage("serviceSetupDone", null, "master");
 	}
 
