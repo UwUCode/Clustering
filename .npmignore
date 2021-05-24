@@ -1,4 +1,5 @@
 test/
-src/
+# we're keeping this for sourcemaps
+#src/
 .vscode/
 .eslintrc.json
